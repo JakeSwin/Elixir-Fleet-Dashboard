@@ -19,6 +19,7 @@ defmodule FleetDashboardWeb.Router do
 
     get "/", PageController, :home
     live "/image", TestLive
+    live "/fleet", FleetLive
   end
 
   # Other scopes may use custom stacks.

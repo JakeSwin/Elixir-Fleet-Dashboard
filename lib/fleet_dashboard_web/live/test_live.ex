@@ -2,7 +2,7 @@ defmodule FleetDashboardWeb.TestLive do
   use FleetDashboardWeb, :live_view
 
   def mount(_params, _session, socket) do
-    FleetMonitor.subscribe(self())
+    # FleetMonitor.subscribe(self())
     {:ok, assign(socket, message: "Hello", test_num: nil, image: nil)}
   end
 

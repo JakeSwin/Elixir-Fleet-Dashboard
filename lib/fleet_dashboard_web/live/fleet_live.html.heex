@@ -1,29 +1,75 @@
-<h1>Dashboard Live</h1>
-<h2>Another Test</h2>
+<h1 class="text-5xl mb-5">Fleet Dashboard</h1>
 <div class="relative">
     <img :if={@map_info} src={"data:image/png;base64," <> get_map_image(@map_info)}/>
-    <!--
     <svg height="100%" width="100%" class="absolute top-0">
-        <line x1="0%" y1="100%" x2="100%" y2="0%" stroke="black" />
-        <line x1="0%" y1="100%" x2="100%" y2="100%" stroke="blue" stroke-width="5"/>
-        <circle cx="50%" cy="50%" r="10" />
-    </svg>
-    -->
-    <!-- <img src="https://external-content.duckduckgo.com/iu/?u=https%3A%2F%2Ftse1.mm.bing.net%2Fth%3Fid%3DOIP.0TNFsw1IEFvmlzH6iRUMSwHaFj%26pid%3DApi&f=1&ipt=7c47c047155623557257745feba745ea5d09eef6b5cc205e22a62fded6f04d3e&ipo=images" class="absolute top-40 left-60 z-10"> -->
-    <svg height="100%" width="100%" class="absolute top-0">
-    <%= for {_idx, %{"x" => x, "y" => y}} <- @verticies do %>
-        <circle cx={"#{x_rel(@map_info, x)}%"} cy={"#{y_rel(@map_info, y)}%"} r="0.8%" />
+    <line
+    :for={{_idx, %{"v1_idx" => v1, "v2_idx" => v2}} <- @edges}
+    x1={"#{x_rel(@map_info, @verticies[v1]["x"])}%"}
+    y1={"#{y_rel(@map_info, @verticies[v1]["y"])}%"}
+    x2={"#{x_rel(@map_info, @verticies[v2]["x"])}%"}
+    y2={"#{y_rel(@map_info, @verticies[v2]["y"])}%"}
+    stroke="#1B998B"
+    stroke-width="0.6%"/>
+    <%= if @fleet_state do %>
+        <%= for robot <- @fleet_state["robots"] do %>
+            <%= if is_list(robot["path"]) do %>
+                <line
+                :for={{s, e} <- get_paths(robot["path"], robot["location"])}
+                :if={not is_same_place?(s, e)}
+                x1={"#{x_rel(@map_info, s["x"])}%"}
+                y1={"#{y_rel(@map_info, s["y"])}%"}
+                x2={"#{x_rel(@map_info, e["x"])}%"}
+                y2={"#{y_rel(@map_info, e["y"])}%"}
+                stroke="#F46036"
+                stroke-width="1%"/>
+            <% end %>
+        <% end %>
     <% end %>
-    <%= for {_idx, %{"v1_idx" => v1, "v2_idx" => v2}} <- @edges do %>
-        <line
-        x1={"#{x_rel(@map_info, @verticies[v1]["x"])}%"}
-        y1={"#{y_rel(@map_info, @verticies[v1]["y"])}%"}
-        x2={"#{x_rel(@map_info, @verticies[v2]["x"])}%"}
-        y2={"#{y_rel(@map_info, @verticies[v2]["y"])}%"}
-        stroke="blue" stroke-width="0.4%"/>
+    <%= for {idx, %{"x" => x, "y" => y}} <- @verticies do %>
+        <circle
+        cx={"#{x_rel(@map_info, x)}%"}
+        cy={"#{y_rel(@map_info, y)}%"}
+        fill="#191716"
+        r="0.6%"/>
+        <%= for loc <- @locations do %>
+            <text
+            :if={loc[idx]}
+            x={"#{x_rel(@map_info, x) - 2}%"}
+            y={"#{y_rel(@map_info, y) - 2}%"}
+            class="text-xs md:text-base lg:text-lg"><%= loc[idx] %></text>
+        <% end %>
     <% end %>
     </svg>
+    <%= if @fleet_state do %>
+        <%= for robot <- @fleet_state["robots"] do %>
+            <% x = x_rel(@map_info, robot["location"]["x"]) %>
+            <% y = y_rel(@map_info, robot["location"]["y"]) %>
+            <% yaw = Float.round(robot["location"]["yaw"], 3) %>
+            <img
+            src={~p"/images/Robot.svg"}
+            class="absolute w-[40px]"
+            style={"top: calc(#{y}% - 20px); left: calc(#{x}% - 20px); rotate: #{-yaw}rad;"}>
+        <% end %>
+    <% end %>
 </div>
-<div>Map scale: <%= @map_info["scale"] %></div>
-<div>Map width: <%= @map_info["width"] %></div>
-<div>Map height: <%= @map_info["height"] %></div>
+<%= if @fleet_state do %>
+    <h2 class="text-2xl">Robots:</h2>
+    <div class="flex pt-4">
+        <div
+        :for={robot <- @fleet_state["robots"]}
+        class={"mr-12 p-4 rounded-lg #{mode_colour(robot["mode"]["mode"])}"}>
+            <div
+            :if={robot["mode"]["mode"] == 2}
+            class="text-center text-lg">
+                Navigating...
+            </div>
+            <img
+            src={~p"/images/Robot.svg"}
+            class="w-[50%] mx-auto my-3">
+            <h4 class="text-center text-lg mb-3 font-bold"><%= robot["name"] %></h4>
+            <div>Battery Percent: <%= robot["battery_percent"] %>%</div>
+            <div>Seq: <%= robot["seq"] %></div>
+            <div>Task ID: <%= robot["task_id"] %></div>
+        </div>
+    </div>
+<% end %>

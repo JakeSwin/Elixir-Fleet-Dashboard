@@ -72,4 +72,17 @@
             <div>Task ID: <%= robot["task_id"] %></div>
         </div>
     </div>
+    <div>
+        <.simple_form
+          for={@form}
+          id="task-request-form"
+          phx-submit="save"
+          phx-change="validate">
+          <.input field={@form[:start]} type="select" options={@locations_list} label="Start location" />
+          <.input field={@form[:finish]} type="select" options={@locations_list} label="Finish location" />
+          <:actions>
+            <.button phx-disable-with="Sending...">Send Task Request</.button>
+          </:actions>
+        </.simple_form>
+    </div>
 <% end %>

@@ -3,8 +3,9 @@
 <div class="flex justify-center w-full">
   <div class="w-full sm:w-[500px] lg:w-[700px]">
     <.live_component
-    module={SubmitTaskLive}
+    module={SimpleSubmitTaskLive}
     id="submit-task-form"
-    locations={get_locations_list(@locations)} />
+    locations={get_locations_list(@locations)} 
+    available_robots={available_robots(@fleet_state)}/>
   </div>
 </div>

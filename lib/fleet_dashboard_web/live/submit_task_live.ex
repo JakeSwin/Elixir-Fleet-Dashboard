@@ -1,12 +1,13 @@
 defmodule FleetDashboardWeb.SubmitTaskLive do
   use FleetDashboardWeb, :live_component
 
-  alias FleetDashboard.TaskRequest
+  alias FleetDashboard.Fleet
+  alias FleetDashboard.Fleet.Request
 
   def mount(socket) do
     {:ok, 
       socket
-      |> assign_task_request()
+      |> assign_request()
       |> assign_changeset()
       |> assign_form()}
   end
@@ -30,26 +31,23 @@ defmodule FleetDashboardWeb.SubmitTaskLive do
     """
   end
 
-  def handle_event("save", %{"task_request" => task_request_params}, %{assigns: %{task_request: task_request}} = socket) do
-    changeset =
-      task_request
-      |> TaskRequest.changeset(task_request_params)
-      |> Map.put(:action, :validate)
+  def handle_event("save", %{"request" => task_request_params}, %{assigns: %{current_user: user}} = socket) do
+    case Fleet.create_request(Map.put(task_request_params, "user_id", user.id)) do
+      {:ok, request} ->
+        changeset = Fleet.change_request(request)
+        FleetMonitor.submit_task(task_request_params["start"], task_request_params["finish"])
+        Phoenix.PubSub.broadcast!(FleetMonitor.PubSub, "new_request", {:new_request, request})
+        {:noreply, socket |> assign(changeset: changeset) |> assign_form()}
 
-    if changeset.valid? do
-      FleetMonitor.submit_task(task_request_params["start"], task_request_params["finish"])
+      {:error, %Ecto.Changeset{} = changeset} ->
+        {:noreply, socket |> assign(changeset: changeset) |> assign_form()}
     end
-
-    {:noreply,
-      socket
-      |> assign(changeset: changeset)
-      |> assign_form()}
   end
 
-  def handle_event("validate", %{"task_request" => task_request_params}, %{assigns: %{task_request: task_request}} = socket) do
+  def handle_event("validate", %{"request" => task_request_params}, %{assigns: %{request: request, current_user: user}} = socket) do
     changeset =
-      task_request
-      |> TaskRequest.changeset(task_request_params)
+      request
+      |> Fleet.change_request(Map.put(task_request_params, "user_id", user.id))
       |> Map.put(:action, :validate)
 
     {:noreply,
@@ -58,14 +56,14 @@ defmodule FleetDashboardWeb.SubmitTaskLive do
       |> assign_form()}
   end
 
-  def assign_task_request(socket) do
+  def assign_request(socket) do
     socket
-    |> assign(task_request: %TaskRequest{})
+    |> assign(request: %Request{})
   end
 
-  def assign_changeset(%{assigns: %{task_request: task_request}} = socket) do
+  def assign_changeset(%{assigns: %{request: request}} = socket) do
     socket
-    |> assign(changeset: TaskRequest.changeset(task_request))
+    |> assign(changeset: Fleet.change_request(request))
   end
 
   def assign_form(%{assigns: %{changeset: changeset}} = socket) do

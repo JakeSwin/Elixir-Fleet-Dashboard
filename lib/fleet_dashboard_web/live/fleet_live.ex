@@ -2,6 +2,7 @@ defmodule FleetDashboardWeb.FleetLive do
   use FleetDashboardWeb, :live_view
 
   alias FleetDashboardWeb.SubmitTaskLive
+  alias FleetDashboard.Fleet
 
   import FleetDashboard.Utils
 
@@ -9,6 +10,7 @@ defmodule FleetDashboardWeb.FleetLive do
 
   def mount(_params, _session, socket) do
     Phoenix.PubSub.subscribe(FleetMonitor.PubSub, "fleet_state")
+    Phoenix.PubSub.subscribe(FleetMonitor.PubSub, "new_request")
 
     {:ok,
       socket
@@ -16,15 +18,41 @@ defmodule FleetDashboardWeb.FleetLive do
       |> assign(image_topics: FleetMonitor.get_image_topics())
       |> assign_edges_and_verticies(FleetMonitor.get_nav_graph())
       |> assign(locations: FleetMonitor.get_locations())
-      |> assign(fleet_state: nil)}
+      |> assign(fleet_state: nil)
+      |> add_stream_requests()}
   end
 
   def handle_info({:fleet_state, fleet_state}, socket) do
     {:noreply, assign(socket, fleet_state: fleet_state)}
   end
 
+  def handle_info({:new_request, request}, socket) do
+    {:noreply, stream_insert(socket, :requests, convert_request_time(request), at: 0)}
+  end
+
   def assign_edges_and_verticies(socket, nav_graph) do
     assign(socket, verticies: nav_graph["verticies"], edges: nav_graph["edges"])
+  end
+
+  def add_stream_requests(socket) do
+    requests = 
+      Fleet.list_requests()
+      |> Enum.sort(& &1.id >= &2.id)
+      |> Enum.map(&convert_request_time/1)
+
+    stream(socket, :requests, requests)
+  end
+
+  def convert_request_time(request) do
+    %{ request | inserted_at: convert_native(request.inserted_at) }
+  end
+
+  def convert_native(time) do
+    {:ok, utc_time} = DateTime.from_naive(time, "Etc/UTC")
+    utc_time
+    |> DateTime.add(1, :hour)
+    |> DateTime.to_string()
+    |> String.replace("Z", "")
   end
 
   def get_map_image(%{"data" => map_file}) do

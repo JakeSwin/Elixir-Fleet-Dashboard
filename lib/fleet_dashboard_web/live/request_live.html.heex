@@ -6,6 +6,20 @@
     module={SimpleSubmitTaskLive}
     id="submit-task-form"
     locations={get_locations_list(@locations)} 
-    available_robots={available_robots(@fleet_state)}/>
+    available_robots={available_robots(@fleet_state)}
+    current_user={@current_user}/>
   </div>
+</div>
+
+<h2 class="text-3xl my-3">My Requests:</h2>
+<div class="max-h-96 overflow-y-scroll mt-8">
+    <.table
+      id="requests"
+      rows={@streams.requests}>
+        <:col :let={{_id, request}} label="ID"><%= request.id %></:col>
+        <:col :let={{_id, request}} label="Start Location"><%= request.start %></:col>
+        <:col :let={{_id, request}} label="Finish Location"><%= request.finish %></:col>
+        <:col :let={{_id, request}} label="User ID"><%= request.user_id %></:col>
+        <:col :let={{_id, request}} label="Time Sent"><%= request.inserted_at %></:col>
+    </.table>
 </div>

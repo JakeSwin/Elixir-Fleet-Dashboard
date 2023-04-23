@@ -20,7 +20,6 @@ defmodule FleetDashboardWeb.Router do
   scope "/", FleetDashboardWeb do
     pipe_through :browser
 
-    get "/", PageController, :home
     live "/image", TestLive
   end
 
@@ -68,6 +67,8 @@ defmodule FleetDashboardWeb.Router do
     live_session :require_authenticated_user,
       root_layout: {FleetDashboardWeb.Layouts, :root},
       on_mount: [{FleetDashboardWeb.UserAuth, :ensure_authenticated}] do
+
+      get "/", PageController, :home
 
       live "/users/settings", UserSettingsLive, :edit
       live "/users/settings/confirm_email/:token", UserSettingsLive, :confirm_email

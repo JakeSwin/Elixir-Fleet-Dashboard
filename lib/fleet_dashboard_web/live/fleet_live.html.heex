@@ -78,6 +78,22 @@
     locations={get_locations_list(@locations)}
     current_user={@current_user}/>
 <% end %>
+<%= if @tasks do %>
+    <h2 class="text-2xl mt-5">Current Tasks:</h2>
+    <%= for task <- @tasks do %>
+        <div>
+            <div>Fleet Name: <%= task["fleet_name"] %></div>
+            <div>Task ID: <%= task["task_id"] %></div>
+            <div>Task State: <%= task_state(task["state"]) %></div>
+            <div>Current Status: <%= task["status"] %></div>
+            <div>Start Time: <%= task["start_time"] %></div>
+            <div>End Time: <%= task["end_time"] %></div>
+            <div>Current Time: <%= task["current_time"] %></div>
+            <progress value={task["current_time"] - task["start_time"]} max={task["end_time"] - task["start_time"]} />
+            <div>Robot Name: <%= task["robot_name"] %></div>
+        </div>
+    <% end %>
+<% end %>
 <div class="max-h-96 overflow-y-scroll mt-8">
     <.table
       id="requests"

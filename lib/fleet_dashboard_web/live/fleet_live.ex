@@ -10,6 +10,7 @@ defmodule FleetDashboardWeb.FleetLive do
 
   def mount(_params, _session, socket) do
     Phoenix.PubSub.subscribe(FleetMonitor.PubSub, "fleet_state")
+    Phoenix.PubSub.subscribe(FleetMonitor.PubSub, "tasks")
     Phoenix.PubSub.subscribe(FleetMonitor.PubSub, "new_request")
 
     {:ok,
@@ -19,11 +20,16 @@ defmodule FleetDashboardWeb.FleetLive do
       |> assign_edges_and_verticies(FleetMonitor.get_nav_graph())
       |> assign(locations: FleetMonitor.get_locations())
       |> assign(fleet_state: nil)
+      |> assign(tasks: nil)
       |> add_stream_requests()}
   end
 
   def handle_info({:fleet_state, fleet_state}, socket) do
     {:noreply, assign(socket, fleet_state: fleet_state)}
+  end
+
+  def handle_info({:tasks, tasks}, socket) do
+    {:noreply, assign(socket, tasks: tasks)}
   end
 
   def handle_info({:new_request, request}, socket) do
@@ -89,4 +95,12 @@ defmodule FleetDashboardWeb.FleetLive do
 
   def mode_colour(2), do: "bg-lime-400"
   def mode_colour(_), do: "bg-[#E0E2DB]"
+
+  def task_state(0), do: "Queued"
+  def task_state(1), do: "Active"
+  def task_state(2), do: "Completed"
+  def task_state(3), do: "Failed"
+  def task_state(4), do: "Cancelled"
+  def task_state(5), do: "Pending"
+  def task_state(_), do: nil
 end

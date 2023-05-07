@@ -5,7 +5,7 @@ defmodule FleetDashboardWeb.SimpleSubmitTaskLive do
   alias FleetDashboard.Fleet.Request
 
   def mount(socket) do
-    {:ok, 
+    {:ok,
       socket
       |> assign_request()
       |> assign_changeset()
@@ -34,12 +34,12 @@ defmodule FleetDashboardWeb.SimpleSubmitTaskLive do
     """
   end
 
-  def handle_event("save", 
-  %{"request" => request_params}, 
-  %{assigns: %{available_robots: robots, locations: locations, current_user: user}} = socket) do
+  def handle_event("save",
+  %{"request" => request_params},
+  %{assigns: %{current_user: user}} = socket) do
     request_params =
       request_params
-      |> Map.put("finish", random_finish(robots, locations))
+      |> Map.put("finish", request_params["start"])
       |> Map.put("user_id", user.id)
 
     case Fleet.create_request(request_params) do
@@ -54,12 +54,12 @@ defmodule FleetDashboardWeb.SimpleSubmitTaskLive do
     end
   end
 
-  def handle_event("validate", 
-  %{"request" => request_params}, 
-  %{assigns: %{request: request, available_robots: robots, locations: locations, current_user: user}} = socket) do
+  def handle_event("validate",
+  %{"request" => request_params},
+  %{assigns: %{request: request, current_user: user}} = socket) do
     request_params =
       request_params
-      |> Map.put("finish", random_finish(robots, locations))
+      |> Map.put("finish", request_params["start"])
       |> Map.put("user_id", user.id)
 
     changeset =

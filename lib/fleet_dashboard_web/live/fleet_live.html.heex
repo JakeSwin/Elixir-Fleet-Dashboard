@@ -1,6 +1,6 @@
 <h1 class="text-5xl mb-5">Fleet Dashboard</h1>
 <div class="relative">
-    <img :if={@map_info} src={"data:image/png;base64," <> get_map_image(@map_info)}/>
+    <img :if={@map_info} src={"data:image/png;base64," <> get_map_image(@map_info)} class="w-[100%]"/>
     <svg height="100%" width="100%" class="absolute top-0">
     <line
     :for={{_idx, %{"v1_idx" => v1, "v2_idx" => v2}} <- @edges}
